@@ -1,5 +1,5 @@
 """
-Value Iteration (VI) - General Form
+Value Iteration (VI) - General Form (model-based, dynamic programming)
 ---------------------
 Solves the Bellman optimality equation iteratively.
 

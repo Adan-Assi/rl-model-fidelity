@@ -43,3 +43,25 @@ Methods that explicitly learn or use a transition model of the environment.
 
 ### Model-Free RL
 Methods that learn value functions or policies directly without modeling environment dynamics.
+
+---
+
+#### Clarification (important)
+
+The distinction is about **what the algorithm does**, not whether the model is given.
+
+- **Model-based (given model)**  
+  The transition model is known in advance and used directly for planning  
+  (e.g., Value Iteration).
+
+- **Model-based (learned model)**  
+  The model is estimated from experience, then used for planning  
+  (e.g., ModelBasedAgent).
+
+- **Model-free**  
+  No model is ever built; the agent learns values/policies directly from transitions  
+  (e.g., SARSA, Q-learning, TD(0)).
+
+**Key takeaway:**  
+Model-based = *build/use a model*  
+Model-free  = *no model at all*
