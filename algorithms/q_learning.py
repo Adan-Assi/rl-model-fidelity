@@ -1,6 +1,6 @@
 """
 Q-learning (model-free, off-policy)
-
+---------------------
 Learns the optimal action-value function Q*(s,a) directly from sampled
 transitions, without access to the environment model (no `model` dict
 anywhere in the file).
