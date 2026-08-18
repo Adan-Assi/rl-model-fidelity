@@ -4,69 +4,82 @@ Model-Based RL (learned model + planning via Value Iteration)
 Learns an explicit model of the environment from sampled transitions,
 then uses Value Iteration to compute a value function and greedy policy.
 
-Unlike model-free methods such as Q-learning and SARSA, this approach
-does NOT update value estimates directly from individual transitions.
-Instead, it separates the problem into two phases:
+Unlike model-free methods (Q-learning, SARSA), this approach does NOT
+update value estimates directly from transitions. Instead, it splits the
+problem into two phases:
 
-    1. Model Learning (from experience)
+    1. Model learning (from experience)
     2. Planning (using the learned model)
 
-From observed transitions (s_t, a_t, r_t, s_{t+1}), the agent estimates:
+------------------------------------------------------------
+Model learning
+
+From observed transitions:
+
+    (s_t, a_t, r_t, s_{t+1})
+
+the agent estimates:
 
     p(s'|s,a)    transition probabilities
     r(s,a,s')    rewards
 
-These estimates are stored in an explicit model of the form:
+These are stored in an explicit model:
 
-    (state, action) -> [(prob, next_state, reward, done), ...]
+    (state, action) → [(prob, next_state, reward, done), ...]
 
-which matches the input expected by `value_iteration()`.
+which is then used as input to Value Iteration.
 
-Planning step:
-At chosen intervals, the agent constructs its current model estimate
-and solves the Bellman optimality equation via Value Iteration:
+------------------------------------------------------------
+Planning (Value Iteration)
 
-    V_{n+1}(s) = max_a Σ_{s'} p̂(s'|s,a) [ r̂(s,a,s') + γ V_n(s') ]
+At planning time, the agent solves the Bellman optimality equation
+on the learned model:
 
-The resulting greedy policy is then used for future interaction.
+    V_{n+1}(s) = max_a Σ_{s'} p̂(s'|s,a)
+                        [ r̂(s,a,s') + γ V_n(s') ]
 
-Key idea: this agent learns a model from data, then plans as if that model were correct.
-That creates a critical dependency:
+This produces:
+- a value function V
+- a greedy policy w.r.t. V
 
-    performance ≈ quality of the learned model
+------------------------------------------------------------
+Key idea
 
-If the model is accurate → behaves like optimal planning
-If the model is biased/noisy → planning propagates those errors
+The entire behavior depends on a single factor:
+
+    quality of the learned model
+
+So:
+- accurate model  → planning ≈ optimal control
+- biased model    → errors propagate through planning
 
 Which is exactly the axis studied in this project:
-    model fidelity and its effect on performance.
+    model fidelity vs performance
 
-Exploration:
+------------------------------------------------------------
+Exploration
 
-This agent acts epsilon-greedily during data collection (see act()),
-using the same decaying-epsilon idea as algorithms/q_learning.py. This
-matters more here than it might look: acting purely greedily w.r.t. an
-early, sparse policy can silently starve half the model of data (the
-other action for a state may never get sampled again once the greedy
-policy commits), causing the "model has converged" signal to fire against
-an incomplete model rather than an accurate one. This is a real failure
-mode observed empirically on Blackjack's short episodes (the agent
-"converged" after 20 hands with a degenerate always-HIT, 0%-win-rate
-policy), not just a theoretical concern -- CartPole's long episodes
-(up to 2000 steps each) happened to mask it, since sheer step-volume
-compensated for the lack of explicit exploration.
+The agent acts ε-greedily during data collection.
 
-Separation of concerns:
+This is important because:
+if the policy becomes greedy too early, parts of the state-action space
+stop being visited, and the learned model becomes incomplete.
 
-- `ModelBasedAgent` handles:
-    learning the model + planning
+This can lead to a false sense of convergence:
+planning stabilizes, but on a partially observed model.
 
-- `run_model_based()` handles:
-    interaction loop, replanning schedule, epsilon schedule, and
-    stopping criterion
+------------------------------------------------------------
+Separation of concerns
 
-This allows flexible experimentation with different replanning and
-exploration strategies.
+- ModelBasedAgent:
+    learns the model + runs Value Iteration (planning)
+
+- run_model_based():
+    controls interaction loop, replanning schedule, exploration schedule,
+    and stopping condition
+
+This separation allows experimenting with:
+different exploration strategies and replanning frequencies.
 """
 
 import random

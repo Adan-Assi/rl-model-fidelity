@@ -1,13 +1,11 @@
 """
-Q-learning (model-free, off-policy)
+Q-learning (model-free, off-policy TD control)
 ---------------------
-Learns the optimal action-value function Q*(s,a) directly from sampled
-transitions, without access to the environment model (no `model` dict
-anywhere in the file).
+Q-learning learns the optimal action-value function Q*(s,a) directly from sampled
+transitions, without access to an environment model.
 
-Key difference from Value Iteration:
-instead of computing expectations over p(s'|s,a), we update from a single
-observed transition at time t:
+This is the model-free counterpart of Value Iteration:
+instead of computing expectations over p(s'|s,a), we update from a single sampled transition:
 
     (s_t, a_t, r_t, s_{t+1})
 
@@ -16,51 +14,67 @@ using the TD (temporal-difference) update:
     Q(s_t, a_t) ← Q(s_t, a_t)
                   + α [ r_t + γ max_{a'} Q(s_{t+1}, a') - Q(s_t, a_t) ]
 
-Key idea:
+------------------------------------------------------------
+Key idea
 
-- The term   r_t + γ max_{a'} Q(s_{t+1}, a')   is a sampled approximation
-  of the Bellman optimality target at time t.
-- Repeated noisy updates average out over time and drive Q_t → Q*, under the
-  classical (decaying-stepsize) theorem stated below. With this file's fixed alpha,
-  see the note at the end instead.
+- The target:
+      r_t + γ max_{a'} Q(s_{t+1}, a')
+  is a sampled approximation of the Bellman optimality backup.
 
-This is the model-free counterpart of Value Iteration:
+- Each update is noisy, but repeated updates average out over time,
+  and push Q_t toward Q*, under standard stochastic approximation conditions.
 
-- Value Iteration → uses the full model (expectation over all next states)
-- Q-learning      → uses a SINGLE sampled transition
-  (s_t, a_t, r_t, s_{t+1})
+------------------------------------------------------------
+Value Iteration vs Q-learning
 
-Exploration:
-Actions are chosen using an ε-greedy policy:
+- Value Iteration:
+    uses full expectation over p(s'|s,a)
 
-    with probability ε       → explore (random action)
-    with probability 1 - ε   → exploit (greedy action)
+- Q-learning:
+    uses a single sampled transition (s_t, a_t, r_t, s_{t+1})
 
-Exploration is necessary so that state-action pairs are visited sufficiently
-often. Without it, the agent may keep choosing the actions that currently
-look best and never discover that another action is better.
+So instead of planning with the model, we learn directly from experience.
 
-ε starts high → more exploration, and gradually decreases over episodes
-→ behavior becomes more greedy.
+------------------------------------------------------------
+Exploration (ε-greedy)
 
-For the classical Q-learning convergence guarantee: 1. every (s,a) pair must
-be visited infinitely often, and 2. the learning rate must satisfy the
-Robbins-Monro conditions:
+Actions are chosen using an ε-greedy policy over Q:
+
+    with probability ε       → random action (exploration)
+    with probability 1 - ε   → argmax_a Q(s,a) (exploitation)
+
+ε typically starts high and decays over time, so early learning explores
+more, and later behavior becomes increasingly greedy.
+
+Exploration is necessary so that all state-action pairs are sufficiently visited;
+otherwise the agent may overfit to early estimates and miss better actions.
+
+------------------------------------------------------------
+Convergence (classical setting)
+
+For convergence to Q*, two conditions are required:
+
+1. Every (s,a) pair is visited infinitely often
+2. Learning rates satisfy Robbins-Monro conditions:
 
     Σ α_t(s,a) = ∞
     Σ α_t²(s,a) < ∞
 
-The first condition requires sufficient exploration; the second requires
-the learning rate to decrease appropriately toward zero.
+These ensure:
+- enough exploration over time
+- but decreasing variance so updates stabilize
 
-Note: This implementation uses a fixed `alpha`, which is a common practical
-choice. Therefore, it does not satisfy the classical theorem's exact
-step-size assumptions and does not have its guarantee of Q_t → Q*.
+------------------------------------------------------------
+Practical note (this implementation)
 
-This is a deliberate practical trade-off: constant-step-size Q-learning
-is a theoretically studied alternative to diminishing step sizes. It can
-converge rapidly to a stationary distribution centered near Q*, with the
-residual bias depending on the step size (e.g., Zhang & Xie, 2024).
+This implementation uses a constant learning rate α.
+
+So:
+- it does not satisfy the full theoretical assumptions
+- but works as a practical stochastic approximation method
+- converging to a neighborhood of Q*, depending on step size
+
+This is a standard trade-off in practice between stability and strict convergence guarantees.
 """
 
 import random
