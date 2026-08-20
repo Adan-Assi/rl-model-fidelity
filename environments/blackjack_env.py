@@ -89,7 +89,7 @@ class BlackjackEnv(Environment):
     Together, these define the setup phase of the environment before any reset()/step() interaction begins.
     """
     def __init__(self, house_hit_threshold: int = 15, with_replacement: bool = True,
-                 seed: int = None):
+                 seed: Optional[int] = None):
         self.house_hit_threshold = house_hit_threshold
         self.with_replacement = with_replacement
         self.rng = random.Random(seed)
