@@ -11,10 +11,39 @@ We evaluate how algorithm behavior changes across:
 - Small, highly estimable models
 - Noisy, discretized approximations
 
+We study this through three paired experimental setups comparing model-based and model-free RL across different environments and fidelity regimes.
+
 ---
 
 ## Research Question
 **How does the performance gap between model-based and model-free RL change as the fidelity of the learned environment model degrades?**
+
+---
+
+## Experimental Unit ("Pair")
+
+Each pair is a controlled experimental comparison between a model-based RL agent and a model-free RL agent evaluated within the same environment.
+
+The performance gap between the two agents is measured under identical environment dynamics, allowing isolation of the effect of model fidelity on learning performance.
+
+---
+
+## Measurement Design
+
+The hypothesis is tested via three complementary comparisons, sampled at
+different points and resolutions along the model-fidelity axis:
+
+- **Pair 1 (FrozenLake)** — exact model, discrete regime
+- **Pair 2 (Blackjack)** — near-exact model, discrete regime
+- **Pair 3 (CartPole)** — continuous sweep over discretization granularity,
+  enabling a direct within-pair gap-vs-fidelity curve
+
+Each pair directly measures the model-based/model-free gap within its own
+environment. Pair 3's swept design additionally allows that gap to be
+tracked as fidelity varies continuously, which is the most direct test of
+the hypothesis' shape (does the gap shrink smoothly, or only appear at
+the extremes?). See `evaluation/METRICS_DESIGN.md` for how performance is
+measured and normalized within and across pairs.
 
 ---
 

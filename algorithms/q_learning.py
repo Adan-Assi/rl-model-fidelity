@@ -90,7 +90,6 @@ def q_learning(
     num_episodes: int,
     alpha: float,
     gamma: float,
-    max_steps_per_episode: int = 200,
     eps_start: float = 1.0,
     eps_end: float = 0.02,
     seed: int = 0,
@@ -101,15 +100,15 @@ def q_learning(
     Q = {(s, a): 0.0 for s in states for a in actions}
 
     episode_rewards, episode_lengths = [], []
- 
+
     for ep in range(num_episodes):
         s = env.reset()
         total_reward, steps = 0.0, 0
 
         # Compute ε for this episode using a linear decay schedule from eps_start to eps_end
         epsilon = linear_epsilon_schedule(ep, num_episodes, eps_start, eps_end)
- 
-        for _ in range(max_steps_per_episode):
+
+        while True:
             steps += 1
 
             # ----- Observe a transition (s_t, a_t, r_t, s_{t+1}) -----
@@ -122,11 +121,20 @@ def q_learning(
 
             # ----- Update Q(s_t, a_t) using the TD update rule -----
 
-            # Bellman optimality target: r_t + γ max_a' Q(s_{t+1}, a')
-            best_next = max(Q[(s_next, a2)] for a2 in actions)
+            if done:
+                # Terminal state: no bootstrap. Avoids relying on s_next
+                # being present in `states` with a permanently-zero
+                # Q-value (not guaranteed for every environment, e.g.
+                # Blackjack's bust totals fall outside `states`).
+                td_target = r
+            else:
+                # Non-terminal: bootstrap from next state.
+                # Bellman optimality target: r_t + γ max_a' Q(s_{t+1}, a')
+                best_next = max(Q[(s_next, a2)] for a2 in actions)
+                td_target = r + gamma * best_next
 
-            # TD error = reward + discounted best next-state value - current Q-value
-            td_error = r + gamma * best_next - Q[(s, a)]
+            # TD error = target - current Q-value
+            td_error = td_target - Q[(s, a)]
 
             # Update only the visited (s_t, a_t) pair
             Q[(s, a)] += alpha * td_error

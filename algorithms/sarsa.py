@@ -79,6 +79,10 @@ def sarsa_control(
     # Start with an arbitrary initialization
     Q = {(s, a): 0.0 for s in states for a in actions}
 
+    # For each episode, we will record the total reward and length
+    # for consistency with other algorithms in this project.
+    episode_rewards, episode_lengths = [], []
+
     # Episode loop:
     # Each episode is one full trajectory of the environment,
     # starting from reset() and ending when done=True.
@@ -93,9 +97,13 @@ def sarsa_control(
         a = epsilon_greedy(Q, s, actions, epsilon, rng)
         done = False
 
+        total_reward, steps = 0.0, 0
+
         # Time step loop (where “t” lives)
         while not done:
+            steps += 1
             s_next, r, done = env.step(a)
+            total_reward += r
 
             # Terminal case (no bootstrap)
             if done:
@@ -114,7 +122,10 @@ def sarsa_control(
             # Move to the next state and action
             s, a = s_next, a_next
 
-    return Q
+        episode_rewards.append(total_reward)
+        episode_lengths.append(steps)
+
+    return Q, episode_rewards, episode_lengths
 
 """
 After SARSA finishes learning, it produces a Q(s,a) table representing how good each action

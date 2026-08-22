@@ -1,6 +1,6 @@
 """
 Model-Based RL (learned model + planning via Value Iteration)
----------------------
+------------------------------------------------------------
 Learns an explicit model of the environment from sampled transitions,
 then uses Value Iteration to compute a value function and greedy policy.
 
@@ -61,12 +61,16 @@ Exploration
 
 The agent acts ε-greedily during data collection.
 
-This is important because:
-if the policy becomes greedy too early, parts of the state-action space
-stop being visited, and the learned model becomes incomplete.
+By default, ε follows a harmonic decay schedule:
 
-This can lead to a false sense of convergence:
-planning stabilizes, but on a partially observed model.
+    ε_t = 1 / (t + 1)
+
+Note that this schedule does NOT match the linear decay used by model-free
+algorithms (Q-learning, SARSA) in this project.
+
+For fair comparisons, a shared exploration schedule should be
+constructed externally (e.g., in run_training) and passed explicitly
+to all algorithms in a pair.
 
 ------------------------------------------------------------
 Separation of concerns
